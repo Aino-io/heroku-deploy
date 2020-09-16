@@ -40,7 +40,7 @@ module.exports =
 /******/ 	// the startup function
 /******/ 	function startup() {
 /******/ 		// Load entry module and return exports
-/******/ 		return __webpack_require__(123);
+/******/ 		return __webpack_require__(409);
 /******/ 	};
 /******/
 /******/ 	// run startup
@@ -49,82 +49,109 @@ module.exports =
 /************************************************************************/
 /******/ ({
 
+/***/ 5:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const os = __importStar(__webpack_require__(87));
+/**
+ * Commands
+ *
+ * Command Format:
+ *   ::name key=value,key=value::message
+ *
+ * Examples:
+ *   ::warning::This is the message
+ *   ::set-env name=MY_VAR::some value
+ */
+function issueCommand(command, properties, message) {
+    const cmd = new Command(command, properties, message);
+    process.stdout.write(cmd.toString() + os.EOL);
+}
+exports.issueCommand = issueCommand;
+function issue(name, message = '') {
+    issueCommand(name, {}, message);
+}
+exports.issue = issue;
+const CMD_STRING = '::';
+class Command {
+    constructor(command, properties, message) {
+        if (!command) {
+            command = 'missing.command';
+        }
+        this.command = command;
+        this.properties = properties;
+        this.message = message;
+    }
+    toString() {
+        let cmdStr = CMD_STRING + this.command;
+        if (this.properties && Object.keys(this.properties).length > 0) {
+            cmdStr += ' ';
+            let first = true;
+            for (const key in this.properties) {
+                if (this.properties.hasOwnProperty(key)) {
+                    const val = this.properties[key];
+                    if (val) {
+                        if (first) {
+                            first = false;
+                        }
+                        else {
+                            cmdStr += ',';
+                        }
+                        cmdStr += `${key}=${escapeProperty(val)}`;
+                    }
+                }
+            }
+        }
+        cmdStr += `${CMD_STRING}${escapeData(this.message)}`;
+        return cmdStr;
+    }
+}
+/**
+ * Sanitizes an input into a string so it can be passed into issueCommand safely
+ * @param input input to sanitize into a string
+ */
+function toCommandValue(input) {
+    if (input === null || input === undefined) {
+        return '';
+    }
+    else if (typeof input === 'string' || input instanceof String) {
+        return input;
+    }
+    return JSON.stringify(input);
+}
+exports.toCommandValue = toCommandValue;
+function escapeData(s) {
+    return toCommandValue(s)
+        .replace(/%/g, '%25')
+        .replace(/\r/g, '%0D')
+        .replace(/\n/g, '%0A');
+}
+function escapeProperty(s) {
+    return toCommandValue(s)
+        .replace(/%/g, '%25')
+        .replace(/\r/g, '%0D')
+        .replace(/\n/g, '%0A')
+        .replace(/:/g, '%3A')
+        .replace(/,/g, '%2C');
+}
+//# sourceMappingURL=command.js.map
+
+/***/ }),
+
 /***/ 87:
 /***/ (function(module) {
 
 module.exports = require("os");
-
-/***/ }),
-
-/***/ 123:
-/***/ (function(__unusedmodule, __unusedexports, __webpack_require__) {
-
-const core = __webpack_require__(173);
-const { promisify } = __webpack_require__(669);
-
-const exec = promisify(__webpack_require__(129).exec);
-
-async function loginHeroku() {
-  const login = core.getInput('email');
-  const password = core.getInput('api_key');
-
-  try {
-    await exec(`echo ${password} | docker login --username=${login} registry.heroku.com --password-stdin`);
-    console.log('Logged in succefully ✅');
-  } catch (error) {
-    core.setFailed(`Authentication process faild. Error: ${error.message}`);
-  }
-}
-
-async function buildPushAndDeploy() {
-  const appName = core.getInput('app_name');
-  const dockerFilePath = core.getInput('dockerfile_path');
-  const targetPath = core.getInput('target_path');
-  const buildOptions = core.getInput('options') || '';
-  const herokuAction = herokuActionSetUp(appName);
-
-  try {
-    await exec(`cd ${dockerFilePath}`);
-
-    await exec(`docker build --file Dockerfile ${buildOptions} --tag registry.heroku.com/${appName}/web ${targetPath}`);
-    console.log('Image built 🛠');
-
-    await exec(herokuAction('push'));
-    console.log('Container pushed to Heroku Container Registry ⏫');
-
-    await exec(herokuAction('release'));
-    console.log('App Deployed successfully 🚀');
-  } catch (error) {
-    core.setFailed(`Something went wrong building your image. Error: ${error.message}`);
-  }
-}
-
-/**
- *
- * @param {string} appName - Heroku App Name
- * @returns {function}
- */
-function herokuActionSetUp(appName) {
-  /**
-   * @typedef {'push' | 'release'} Actions
-   * @param {Actions} action - Action to be performed
-   * @returns {string}
-   */
-  return function herokuAction(action) {
-    const HEROKU_API_KEY = core.getInput('api_key');
-    const exportKey = `HEROKU_API_KEY=${HEROKU_API_KEY}`;
-
-    return `${exportKey} heroku container:${action} web --app ${appName}`
-  }
-}
-
-loginHeroku()
-  .then(() => buildPushAndDeploy())
-  .catch((error) => {
-    console.log({ message: error.message });
-    core.setFailed(error.message);
-  })
-
 
 /***/ }),
 
@@ -135,7 +162,7 @@ module.exports = require("child_process");
 
 /***/ }),
 
-/***/ 173:
+/***/ 256:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -157,7 +184,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const command_1 = __webpack_require__(300);
+const command_1 = __webpack_require__(5);
 const os = __importStar(__webpack_require__(87));
 const path = __importStar(__webpack_require__(622));
 /**
@@ -364,102 +391,75 @@ exports.getState = getState;
 
 /***/ }),
 
-/***/ 300:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
+/***/ 409:
+/***/ (function(__unusedmodule, __unusedexports, __webpack_require__) {
 
-"use strict";
+const core = __webpack_require__(256);
+const { promisify } = __webpack_require__(669);
 
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const os = __importStar(__webpack_require__(87));
+const exec = promisify(__webpack_require__(129).exec);
+
+async function loginHeroku() {
+  const login = core.getInput('email');
+  const password = core.getInput('api_key');
+
+  try {
+    await exec(`echo ${password} | docker login --username=${login} registry.heroku.com --password-stdin`);
+    console.log('Logged in succefully ✅');
+  } catch (error) {
+    core.setFailed(`Authentication process faild. Error: ${error.message}`);
+  }
+}
+
+async function buildPushAndDeploy() {
+  const appName = core.getInput('app_name');
+  const dockerFilePath = core.getInput('dockerfile_path');
+  const targetPath = core.getInput('target_path');
+  const buildOptions = core.getInput('options') || '';
+  const herokuAction = herokuActionSetUp(appName);
+
+  try {
+    await exec(`cd ${dockerFilePath}`);
+
+    await exec(`docker build --file Dockerfile --build-arg ${buildOptions} --tag registry.heroku.com/${appName}/web ${targetPath}`);
+    console.log('Image built 🛠');
+
+    await exec(herokuAction('push'));
+    console.log('Container pushed to Heroku Container Registry ⏫');
+
+    await exec(herokuAction('release'));
+    console.log('App Deployed successfully 🚀');
+  } catch (error) {
+    core.setFailed(`Something went wrong building your image. Error: ${error.message}`);
+  }
+}
+
 /**
- * Commands
  *
- * Command Format:
- *   ::name key=value,key=value::message
- *
- * Examples:
- *   ::warning::This is the message
- *   ::set-env name=MY_VAR::some value
+ * @param {string} appName - Heroku App Name
+ * @returns {function}
  */
-function issueCommand(command, properties, message) {
-    const cmd = new Command(command, properties, message);
-    process.stdout.write(cmd.toString() + os.EOL);
+function herokuActionSetUp(appName) {
+  /**
+   * @typedef {'push' | 'release'} Actions
+   * @param {Actions} action - Action to be performed
+   * @returns {string}
+   */
+  return function herokuAction(action) {
+    const HEROKU_API_KEY = core.getInput('api_key');
+    const exportKey = `HEROKU_API_KEY=${HEROKU_API_KEY}`;
+
+    return `${exportKey} heroku container:${action} web --app ${appName}`
+  }
 }
-exports.issueCommand = issueCommand;
-function issue(name, message = '') {
-    issueCommand(name, {}, message);
-}
-exports.issue = issue;
-const CMD_STRING = '::';
-class Command {
-    constructor(command, properties, message) {
-        if (!command) {
-            command = 'missing.command';
-        }
-        this.command = command;
-        this.properties = properties;
-        this.message = message;
-    }
-    toString() {
-        let cmdStr = CMD_STRING + this.command;
-        if (this.properties && Object.keys(this.properties).length > 0) {
-            cmdStr += ' ';
-            let first = true;
-            for (const key in this.properties) {
-                if (this.properties.hasOwnProperty(key)) {
-                    const val = this.properties[key];
-                    if (val) {
-                        if (first) {
-                            first = false;
-                        }
-                        else {
-                            cmdStr += ',';
-                        }
-                        cmdStr += `${key}=${escapeProperty(val)}`;
-                    }
-                }
-            }
-        }
-        cmdStr += `${CMD_STRING}${escapeData(this.message)}`;
-        return cmdStr;
-    }
-}
-/**
- * Sanitizes an input into a string so it can be passed into issueCommand safely
- * @param input input to sanitize into a string
- */
-function toCommandValue(input) {
-    if (input === null || input === undefined) {
-        return '';
-    }
-    else if (typeof input === 'string' || input instanceof String) {
-        return input;
-    }
-    return JSON.stringify(input);
-}
-exports.toCommandValue = toCommandValue;
-function escapeData(s) {
-    return toCommandValue(s)
-        .replace(/%/g, '%25')
-        .replace(/\r/g, '%0D')
-        .replace(/\n/g, '%0A');
-}
-function escapeProperty(s) {
-    return toCommandValue(s)
-        .replace(/%/g, '%25')
-        .replace(/\r/g, '%0D')
-        .replace(/\n/g, '%0A')
-        .replace(/:/g, '%3A')
-        .replace(/,/g, '%2C');
-}
-//# sourceMappingURL=command.js.map
+
+loginHeroku()
+  .then(() => buildPushAndDeploy())
+  .catch((error) => {
+    console.log({ message: error.message });
+    core.setFailed(error.message);
+  })
+
 
 /***/ }),
 
