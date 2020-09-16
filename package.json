@@ -1,6 +1,6 @@
 {
   "name": "deploy-heroku",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "A simple action to deploy container to Heroku Container Registry",
   "main": "index.js",
   "scripts": {},
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jctaveras/heroku-deploy.git"
+    "url": "git+https://github.com/Aino-io/heroku-deploy.git"
   },
   "keywords": [
     "github",
@@ -24,9 +24,9 @@
   "author": "Jean Carlos Tavera",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/jctaveras/heroku-deploy/issues"
+    "url": "https://github.com/Aino-io/heroku-deploy/issues"
   },
-  "homepage": "https://github.com/jctaveras/heroku-deploy#readme",
+  "homepage": "https://github.com/Aino-io/heroku-deploy#readme",
   "dependencies": {
     "@actions/core": "^1.2.3",
     "@actions/github": "^2.1.1"
