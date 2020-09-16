@@ -25,4 +25,4 @@ branding:
   color: purple
 runs:
   using: 'node12'
-  main: 'index.js'
+  main: 'dist/index.js'
