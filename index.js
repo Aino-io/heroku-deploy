@@ -22,49 +22,32 @@ async function buildPushAndDeploy() {
   const buildOptions = core.getInput("options") || "";
   const processType = core.getInput("process_type") || "web";
   const herokuAction = herokuActionSetUp(appName, processType);
-
-  console.log(`appName: ${appName} dockerFilePath: ${dockerFilePath} targetPath: ${targetPath} buildOption: ${buildOptions}`);
-
   const dockerCmd = `docker build --file ${dockerFilePath}/Dockerfile --build-arg ${buildOptions} --tag registry.heroku.com/${appName}/web ${targetPath}`;
-  console.log(`dockerCmd: ${dockerCmd}`);
+
   try {
-    await exec(dockerCmd, (error, stdout, stderr) => {
-      if (error) {
-        console.error(`docker build error: ${error}`);
-        return;
-      }
-      console.log(`docker build stdout: ${stdout}`);
-      console.error(`docker build stderr: ${stderr}`);
-    });
+    await run(dockerCmd);
     console.log("Image built 🛠");
 
-    await exec(herokuAction("push"), (error, stdout, stderr) => {
-      if (error) {
-        console.error(`heroku push error: ${error}`);
-        return;
-      }
-      console.log(`heroku push stdout: ${stdout}`);
-      console.error(`heroku push stderr: ${stderr}`);
-    });
+    await run(herokuAction("push"));
     console.log("Container pushed to Heroku Container Registry ⏫");
 
-    await exec(herokuAction("release"), (error, stdout, stderr) => {
-      if (error) {
-        console.error(`heroku release error: ${error}`);
-        return;
-      }
-      console.log(`heroku release stdout: ${stdout}`);
-      console.error(`heroku release stderr: ${stderr}`);
-    });
+    await run(herokuAction("release"));
     console.log("App Deployed successfully 🚀");
   } catch (error) {
     core.setFailed(`Something went wrong building your image. Error: ${error.message}`);
   }
 }
 
+async function run(cmd) {
+  const { stdout, stderr } = await exec(cmd);
+  console.log('stdout:', stdout);
+  console.error('stderr:', stderr);
+}
+
 /**
  *
  * @param {string} appName - Heroku App Name
+ * @param {string} processType - Heroku process type
  * @returns {function}
  */
 function herokuActionSetUp(appName, processType) {
