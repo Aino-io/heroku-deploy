@@ -20,20 +20,42 @@ async function buildPushAndDeploy() {
   const dockerFilePath = core.getInput("dockerfile_path");
   const targetPath = core.getInput("target_path") || ".";
   const buildOptions = core.getInput("options") || "";
-  const herokuAction = herokuActionSetUp(appName);
+  const processType = core.getInput("process_type") || "web";
+  const herokuAction = herokuActionSetUp(appName, processType);
 
   console.log(`appName: ${appName} dockerFilePath: ${dockerFilePath} targetPath: ${targetPath} buildOption: ${buildOptions}`);
 
   const dockerCmd = `docker build --file ${dockerFilePath}/Dockerfile --build-arg ${buildOptions} --tag registry.heroku.com/${appName}/web ${targetPath}`;
   console.log(`dockerCmd: ${dockerCmd}`);
   try {
-    await exec(dockerCmd);
+    await exec(dockerCmd, (error, stdout, stderr) => {
+      if (error) {
+        console.error(`docker build error: ${error}`);
+        return;
+      }
+      console.log(`docker build stdout: ${stdout}`);
+      console.error(`docker build stderr: ${stderr}`);
+    });
     console.log("Image built 🛠");
 
-    await exec(herokuAction("push"));
+    await exec(herokuAction("push"), (error, stdout, stderr) => {
+      if (error) {
+        console.error(`heroku push error: ${error}`);
+        return;
+      }
+      console.log(`heroku push stdout: ${stdout}`);
+      console.error(`heroku push stderr: ${stderr}`);
+    });
     console.log("Container pushed to Heroku Container Registry ⏫");
 
-    await exec(herokuAction("release"));
+    await exec(herokuAction("release"), (error, stdout, stderr) => {
+      if (error) {
+        console.error(`heroku release error: ${error}`);
+        return;
+      }
+      console.log(`heroku release stdout: ${stdout}`);
+      console.error(`heroku release stderr: ${stderr}`);
+    });
     console.log("App Deployed successfully 🚀");
   } catch (error) {
     core.setFailed(`Something went wrong building your image. Error: ${error.message}`);
@@ -45,7 +67,7 @@ async function buildPushAndDeploy() {
  * @param {string} appName - Heroku App Name
  * @returns {function}
  */
-function herokuActionSetUp(appName) {
+function herokuActionSetUp(appName, processType) {
   /**
    * @typedef {"push" | "release"} Actions
    * @param {Actions} action - Action to be performed
@@ -55,7 +77,7 @@ function herokuActionSetUp(appName) {
     const HEROKU_API_KEY = core.getInput("api_key");
     const exportKey = `HEROKU_API_KEY=${HEROKU_API_KEY}`;
 
-    return `${exportKey} heroku container:${action} web --app ${appName}`
+    return `${exportKey} heroku container:${action} ${processType} --app ${appName}`
   }
 }
 
