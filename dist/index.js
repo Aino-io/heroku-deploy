@@ -40,7 +40,7 @@ module.exports =
 /******/ 	// the startup function
 /******/ 	function startup() {
 /******/ 		// Load entry module and return exports
-/******/ 		return __webpack_require__(953);
+/******/ 		return __webpack_require__(619);
 /******/ 	};
 /******/
 /******/ 	// run startup
@@ -48,105 +48,6 @@ module.exports =
 /******/ })
 /************************************************************************/
 /******/ ({
-
-/***/ 9:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const os = __importStar(__webpack_require__(87));
-/**
- * Commands
- *
- * Command Format:
- *   ::name key=value,key=value::message
- *
- * Examples:
- *   ::warning::This is the message
- *   ::set-env name=MY_VAR::some value
- */
-function issueCommand(command, properties, message) {
-    const cmd = new Command(command, properties, message);
-    process.stdout.write(cmd.toString() + os.EOL);
-}
-exports.issueCommand = issueCommand;
-function issue(name, message = '') {
-    issueCommand(name, {}, message);
-}
-exports.issue = issue;
-const CMD_STRING = '::';
-class Command {
-    constructor(command, properties, message) {
-        if (!command) {
-            command = 'missing.command';
-        }
-        this.command = command;
-        this.properties = properties;
-        this.message = message;
-    }
-    toString() {
-        let cmdStr = CMD_STRING + this.command;
-        if (this.properties && Object.keys(this.properties).length > 0) {
-            cmdStr += ' ';
-            let first = true;
-            for (const key in this.properties) {
-                if (this.properties.hasOwnProperty(key)) {
-                    const val = this.properties[key];
-                    if (val) {
-                        if (first) {
-                            first = false;
-                        }
-                        else {
-                            cmdStr += ',';
-                        }
-                        cmdStr += `${key}=${escapeProperty(val)}`;
-                    }
-                }
-            }
-        }
-        cmdStr += `${CMD_STRING}${escapeData(this.message)}`;
-        return cmdStr;
-    }
-}
-/**
- * Sanitizes an input into a string so it can be passed into issueCommand safely
- * @param input input to sanitize into a string
- */
-function toCommandValue(input) {
-    if (input === null || input === undefined) {
-        return '';
-    }
-    else if (typeof input === 'string' || input instanceof String) {
-        return input;
-    }
-    return JSON.stringify(input);
-}
-exports.toCommandValue = toCommandValue;
-function escapeData(s) {
-    return toCommandValue(s)
-        .replace(/%/g, '%25')
-        .replace(/\r/g, '%0D')
-        .replace(/\n/g, '%0A');
-}
-function escapeProperty(s) {
-    return toCommandValue(s)
-        .replace(/%/g, '%25')
-        .replace(/\r/g, '%0D')
-        .replace(/\n/g, '%0A')
-        .replace(/:/g, '%3A')
-        .replace(/,/g, '%2C');
-}
-//# sourceMappingURL=command.js.map
-
-/***/ }),
 
 /***/ 87:
 /***/ (function(module) {
@@ -162,100 +63,7 @@ module.exports = require("child_process");
 
 /***/ }),
 
-/***/ 622:
-/***/ (function(module) {
-
-module.exports = require("path");
-
-/***/ }),
-
-/***/ 669:
-/***/ (function(module) {
-
-module.exports = require("util");
-
-/***/ }),
-
-/***/ 953:
-/***/ (function(__unusedmodule, __unusedexports, __webpack_require__) {
-
-const core = __webpack_require__(993);
-const { promisify } = __webpack_require__(669);
-
-const exec = promisify(__webpack_require__(129).exec);
-
-async function loginHeroku() {
-  const login = core.getInput("email");
-  const password = core.getInput("api_key");
-
-  try {
-    await exec(`echo ${password} | docker login --username=${login} registry.heroku.com --password-stdin`);
-    console.log("Logged in succefully ✅");
-  } catch (error) {
-    core.setFailed(`Authentication process faild. Error: ${error.message}`);
-  }
-}
-
-async function buildPushAndDeploy() {
-  const appName = core.getInput("app_name");
-  const dockerFilePath = core.getInput("dockerfile_path");
-  const targetPath = core.getInput("target_path") || ".";
-  const buildOptions = core.getInput("options") || "";
-  const processType = core.getInput("process_type") || "web";
-  const herokuAction = herokuActionSetUp(appName, processType);
-  const dockerCmd = `docker build --file ${dockerFilePath}/Dockerfile --build-arg ${buildOptions} --tag registry.heroku.com/${appName}/web ${targetPath}`;
-
-  try {
-    await run(dockerCmd);
-    console.log("Image built 🛠");
-
-    await run(herokuAction("push"));
-    console.log("Container pushed to Heroku Container Registry ⏫");
-
-    await run(herokuAction("release"));
-    console.log("App Deployed successfully 🚀");
-  } catch (error) {
-    core.setFailed(`Something went wrong building your image. Error: ${error.message}`);
-  }
-}
-
-async function run(cmd) {
-  const { stdout, stderr } = await exec(cmd);
-  console.log('stdout:', stdout);
-  console.error('stderr:', stderr);
-}
-
-/**
- *
- * @param {string} appName - Heroku App Name
- * @param {string} processType - Heroku process type
- * @returns {function}
- */
-function herokuActionSetUp(appName, processType) {
-  /**
-   * @typedef {"push" | "release"} Actions
-   * @param {Actions} action - Action to be performed
-   * @returns {string}
-   */
-  return function herokuAction(action) {
-    const HEROKU_API_KEY = core.getInput("api_key");
-    const exportKey = `HEROKU_API_KEY=${HEROKU_API_KEY}`;
-
-    return `${exportKey} heroku container:${action} ${processType} --app ${appName}`
-  }
-}
-
-loginHeroku()
-  .then(() => buildPushAndDeploy())
-  .catch((error) => {
-    console.log({ message: error.message });
-    core.setFailed(error.message);
-  })
-
-
-/***/ }),
-
-/***/ 993:
+/***/ 436:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -277,7 +85,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const command_1 = __webpack_require__(9);
+const command_1 = __webpack_require__(493);
 const os = __importStar(__webpack_require__(87));
 const path = __importStar(__webpack_require__(622));
 /**
@@ -481,6 +289,198 @@ function getState(name) {
 }
 exports.getState = getState;
 //# sourceMappingURL=core.js.map
+
+/***/ }),
+
+/***/ 493:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const os = __importStar(__webpack_require__(87));
+/**
+ * Commands
+ *
+ * Command Format:
+ *   ::name key=value,key=value::message
+ *
+ * Examples:
+ *   ::warning::This is the message
+ *   ::set-env name=MY_VAR::some value
+ */
+function issueCommand(command, properties, message) {
+    const cmd = new Command(command, properties, message);
+    process.stdout.write(cmd.toString() + os.EOL);
+}
+exports.issueCommand = issueCommand;
+function issue(name, message = '') {
+    issueCommand(name, {}, message);
+}
+exports.issue = issue;
+const CMD_STRING = '::';
+class Command {
+    constructor(command, properties, message) {
+        if (!command) {
+            command = 'missing.command';
+        }
+        this.command = command;
+        this.properties = properties;
+        this.message = message;
+    }
+    toString() {
+        let cmdStr = CMD_STRING + this.command;
+        if (this.properties && Object.keys(this.properties).length > 0) {
+            cmdStr += ' ';
+            let first = true;
+            for (const key in this.properties) {
+                if (this.properties.hasOwnProperty(key)) {
+                    const val = this.properties[key];
+                    if (val) {
+                        if (first) {
+                            first = false;
+                        }
+                        else {
+                            cmdStr += ',';
+                        }
+                        cmdStr += `${key}=${escapeProperty(val)}`;
+                    }
+                }
+            }
+        }
+        cmdStr += `${CMD_STRING}${escapeData(this.message)}`;
+        return cmdStr;
+    }
+}
+/**
+ * Sanitizes an input into a string so it can be passed into issueCommand safely
+ * @param input input to sanitize into a string
+ */
+function toCommandValue(input) {
+    if (input === null || input === undefined) {
+        return '';
+    }
+    else if (typeof input === 'string' || input instanceof String) {
+        return input;
+    }
+    return JSON.stringify(input);
+}
+exports.toCommandValue = toCommandValue;
+function escapeData(s) {
+    return toCommandValue(s)
+        .replace(/%/g, '%25')
+        .replace(/\r/g, '%0D')
+        .replace(/\n/g, '%0A');
+}
+function escapeProperty(s) {
+    return toCommandValue(s)
+        .replace(/%/g, '%25')
+        .replace(/\r/g, '%0D')
+        .replace(/\n/g, '%0A')
+        .replace(/:/g, '%3A')
+        .replace(/,/g, '%2C');
+}
+//# sourceMappingURL=command.js.map
+
+/***/ }),
+
+/***/ 619:
+/***/ (function(__unusedmodule, __unusedexports, __webpack_require__) {
+
+const core = __webpack_require__(436);
+const { promisify } = __webpack_require__(669);
+
+const exec = promisify(__webpack_require__(129).exec);
+
+async function loginHeroku() {
+  const login = core.getInput("email");
+  const password = core.getInput("api_key");
+
+  try {
+    await exec(`echo ${password} | docker login --username=${login} registry.heroku.com --password-stdin`);
+    console.log("Logged in succefully ✅");
+  } catch (error) {
+    core.setFailed(`Authentication process faild. Error: ${error.message}`);
+  }
+}
+
+async function buildPushAndDeploy() {
+  const appName = core.getInput("app_name");
+  const dockerFilePath = core.getInput("dockerfile_path");
+  const targetPath = core.getInput("target_path") || ".";
+  const buildOptions = core.getInput("options") || "";
+  const processType = core.getInput("process_type") || "web";
+  const herokuAction = herokuActionSetUp(appName, processType);
+  const dockerCmd = `docker build --file ${dockerFilePath}/Dockerfile --build-arg ${buildOptions} --tag registry.heroku.com/${appName}/${processType} ${targetPath}`;
+
+  try {
+    await run(dockerCmd);
+    console.log("Image built 🛠");
+
+    await run(`docker push registry.heroku.com/${appName}/${processType}`);
+    console.log("Container pushed to Heroku Container Registry ⏫");
+
+    await run(herokuAction("release"));
+    console.log("App Deployed successfully 🚀");
+  } catch (error) {
+    core.setFailed(`Something went wrong building your image. Error: ${error.message}`);
+  }
+}
+
+async function run(cmd) {
+  const { stdout, stderr } = await exec(cmd);
+  console.log('stdout:', stdout);
+  console.error('stderr:', stderr);
+}
+
+/**
+ *
+ * @param {string} appName - Heroku App Name
+ * @param {string} processType - Heroku process type
+ * @returns {function}
+ */
+function herokuActionSetUp(appName, processType) {
+  /**
+   * @typedef {"push" | "release"} Actions
+   * @param {Actions} action - Action to be performed
+   * @returns {string}
+   */
+  return function herokuAction(action) {
+    const HEROKU_API_KEY = core.getInput("api_key");
+    const exportKey = `HEROKU_API_KEY=${HEROKU_API_KEY}`;
+
+    return `${exportKey} heroku container:${action} ${processType} --app ${appName}`
+  }
+}
+
+loginHeroku()
+  .then(() => buildPushAndDeploy())
+  .catch((error) => {
+    console.log({ message: error.message });
+    core.setFailed(error.message);
+  })
+
+
+/***/ }),
+
+/***/ 622:
+/***/ (function(module) {
+
+module.exports = require("path");
+
+/***/ }),
+
+/***/ 669:
+/***/ (function(module) {
+
+module.exports = require("util");
 
 /***/ })
 

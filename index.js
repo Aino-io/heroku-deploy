@@ -22,13 +22,13 @@ async function buildPushAndDeploy() {
   const buildOptions = core.getInput("options") || "";
   const processType = core.getInput("process_type") || "web";
   const herokuAction = herokuActionSetUp(appName, processType);
-  const dockerCmd = `docker build --file ${dockerFilePath}/Dockerfile --build-arg ${buildOptions} --tag registry.heroku.com/${appName}/web ${targetPath}`;
+  const dockerCmd = `docker build --file ${dockerFilePath}/Dockerfile --build-arg ${buildOptions} --tag registry.heroku.com/${appName}/${processType} ${targetPath}`;
 
   try {
     await run(dockerCmd);
     console.log("Image built 🛠");
 
-    await run(herokuAction("push"));
+    await run(`docker push registry.heroku.com/${appName}/${processType}`);
     console.log("Container pushed to Heroku Container Registry ⏫");
 
     await run(herokuAction("release"));
