@@ -40,7 +40,7 @@ module.exports =
 /******/ 	// the startup function
 /******/ 	function startup() {
 /******/ 		// Load entry module and return exports
-/******/ 		return __webpack_require__(173);
+/******/ 		return __webpack_require__(880);
 /******/ 	};
 /******/
 /******/ 	// run startup
@@ -63,7 +63,7 @@ module.exports = require("child_process");
 
 /***/ }),
 
-/***/ 155:
+/***/ 305:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -162,10 +162,24 @@ function escapeProperty(s) {
 
 /***/ }),
 
-/***/ 173:
+/***/ 622:
+/***/ (function(module) {
+
+module.exports = require("path");
+
+/***/ }),
+
+/***/ 669:
+/***/ (function(module) {
+
+module.exports = require("util");
+
+/***/ }),
+
+/***/ 880:
 /***/ (function(__unusedmodule, __unusedexports, __webpack_require__) {
 
-const core = __webpack_require__(943);
+const core = __webpack_require__(936);
 const { promisify } = __webpack_require__(669);
 
 const exec = promisify(__webpack_require__(129).exec);
@@ -189,8 +203,12 @@ async function buildPushAndDeploy() {
   const buildOptions = core.getInput("options") || "";
   const herokuAction = herokuActionSetUp(appName);
 
+  console.log(`appName: ${appName} dockerFilePath: ${dockerFilePath} targetPath: ${targetPath} buildOption: ${buildOptions}`);
+
+  const dockerCmd = `docker build --file ${dockerFilePath}/Dockerfile --build-arg ${buildOptions} --tag registry.heroku.com/${appName}/web ${targetPath}`;
+  console.log(`dockerCmd: ${dockerCmd}`);
   try {
-    await exec(`docker build --file ${dockerFilePath}/Dockerfile --build-arg ${buildOptions} --tag registry.heroku.com/${appName}/web ${targetPath}`);
+    await exec(dockerCmd);
     console.log("Image built 🛠");
 
     await exec(herokuAction("push"));
@@ -232,21 +250,7 @@ loginHeroku()
 
 /***/ }),
 
-/***/ 622:
-/***/ (function(module) {
-
-module.exports = require("path");
-
-/***/ }),
-
-/***/ 669:
-/***/ (function(module) {
-
-module.exports = require("util");
-
-/***/ }),
-
-/***/ 943:
+/***/ 936:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -268,7 +272,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const command_1 = __webpack_require__(155);
+const command_1 = __webpack_require__(305);
 const os = __importStar(__webpack_require__(87));
 const path = __importStar(__webpack_require__(622));
 /**
