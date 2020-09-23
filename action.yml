@@ -14,9 +14,6 @@ inputs:
   dockerfile_path:
     description: 'Dockerfile path'
     required: true
-  env_config_path:
-    description: 'Env configuration file'
-    required: true
   target_path:
     description: 'Target path (defaults to .)'
     required: false

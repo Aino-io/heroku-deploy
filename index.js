@@ -23,9 +23,6 @@ async function buildPushAndDeploy() {
     const buildOptions = core.getInput("options") || "";
     const processType = core.getInput("process_type") || "web";
     const herokuAction = herokuActionSetUp(appName, processType);
-    const envConfigPath = core.getInput("env_config_path");
-
-    const copyEnvCmd = `cp ${envConfigPath} env.js`;
 
     const dockerCmd = `docker build --file ${dockerFilePath}/Dockerfile --build-arg ${buildOptions} --tag registry.heroku.com/${appName}/${processType} ${targetPath}`;
 

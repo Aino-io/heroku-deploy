@@ -40,7 +40,7 @@ module.exports =
 /******/ 	// the startup function
 /******/ 	function startup() {
 /******/ 		// Load entry module and return exports
-/******/ 		return __webpack_require__(926);
+/******/ 		return __webpack_require__(915);
 /******/ 	};
 /******/
 /******/ 	// run startup
@@ -49,35 +49,7 @@ module.exports =
 /************************************************************************/
 /******/ ({
 
-/***/ 87:
-/***/ (function(module) {
-
-module.exports = require("os");
-
-/***/ }),
-
-/***/ 129:
-/***/ (function(module) {
-
-module.exports = require("child_process");
-
-/***/ }),
-
-/***/ 622:
-/***/ (function(module) {
-
-module.exports = require("path");
-
-/***/ }),
-
-/***/ 669:
-/***/ (function(module) {
-
-module.exports = require("util");
-
-/***/ }),
-
-/***/ 691:
+/***/ 19:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -99,7 +71,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const command_1 = __webpack_require__(753);
+const command_1 = __webpack_require__(412);
 const os = __importStar(__webpack_require__(87));
 const path = __importStar(__webpack_require__(622));
 /**
@@ -306,7 +278,21 @@ exports.getState = getState;
 
 /***/ }),
 
-/***/ 753:
+/***/ 87:
+/***/ (function(module) {
+
+module.exports = require("os");
+
+/***/ }),
+
+/***/ 129:
+/***/ (function(module) {
+
+module.exports = require("child_process");
+
+/***/ }),
+
+/***/ 412:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -405,10 +391,24 @@ function escapeProperty(s) {
 
 /***/ }),
 
-/***/ 926:
+/***/ 622:
+/***/ (function(module) {
+
+module.exports = require("path");
+
+/***/ }),
+
+/***/ 669:
+/***/ (function(module) {
+
+module.exports = require("util");
+
+/***/ }),
+
+/***/ 915:
 /***/ (function(__unusedmodule, __unusedexports, __webpack_require__) {
 
-const core = __webpack_require__(691);
+const core = __webpack_require__(19);
 const { promisify } = __webpack_require__(669);
 
 const exec = promisify(__webpack_require__(129).exec);
@@ -433,9 +433,6 @@ async function buildPushAndDeploy() {
     const buildOptions = core.getInput("options") || "";
     const processType = core.getInput("process_type") || "web";
     const herokuAction = herokuActionSetUp(appName, processType);
-    const envConfigPath = core.getInput("env_config_path");
-
-    const copyEnvCmd = `cp ${envConfigPath} env.js`;
 
     const dockerCmd = `docker build --file ${dockerFilePath}/Dockerfile --build-arg ${buildOptions} --tag registry.heroku.com/${appName}/${processType} ${targetPath}`;
 
