@@ -9,22 +9,26 @@ async function loginHeroku() {
 
   try {
     await exec(`echo ${password} | docker login --username=${login} registry.heroku.com --password-stdin`);
-    console.log("Logged in succefully ✅");
+    console.log("Logged in successfully ✅");
   } catch (error) {
-    core.setFailed(`Authentication process faild. Error: ${error.message}`);
+    core.setFailed(`Authentication process failed. Error: ${error.message}`);
   }
 }
 
 async function buildPushAndDeploy() {
-  const appName = core.getInput("app_name");
-  const dockerFilePath = core.getInput("dockerfile_path");
-  const targetPath = core.getInput("target_path") || ".";
-  const buildOptions = core.getInput("options") || "";
-  const processType = core.getInput("process_type") || "web";
-  const herokuAction = herokuActionSetUp(appName, processType);
-  const dockerCmd = `docker build --file ${dockerFilePath}/Dockerfile --build-arg ${buildOptions} --tag registry.heroku.com/${appName}/${processType} ${targetPath}`;
-
   try {
+    const appName = core.getInput("app_name");
+    const dockerFilePath = core.getInput("dockerfile_path");
+    const targetPath = core.getInput("target_path") || ".";
+    const buildOptions = core.getInput("options") || "";
+    const processType = core.getInput("process_type") || "web";
+    const herokuAction = herokuActionSetUp(appName, processType);
+    const envConfigPath = core.getInput("env_config_path");
+
+    const copyEnvCmd = `cp ${envConfigPath} env.js`;
+
+    const dockerCmd = `docker build --file ${dockerFilePath}/Dockerfile --build-arg ${buildOptions} --tag registry.heroku.com/${appName}/${processType} ${targetPath}`;
+
     await run(dockerCmd);
     console.log("Image built 🛠");
 
@@ -40,8 +44,8 @@ async function buildPushAndDeploy() {
 
 async function run(cmd) {
   const { stdout, stderr } = await exec(cmd);
-  console.log('stdout:', stdout);
-  console.error('stderr:', stderr);
+  console.log("stdout:", stdout);
+  console.error("stderr:", stderr);
 }
 
 /**
@@ -60,8 +64,8 @@ function herokuActionSetUp(appName, processType) {
     const HEROKU_API_KEY = core.getInput("api_key");
     const exportKey = `HEROKU_API_KEY=${HEROKU_API_KEY}`;
 
-    return `${exportKey} heroku container:${action} ${processType} --app ${appName}`
-  }
+    return `${exportKey} heroku container:${action} ${processType} --app ${appName}`;
+  };
 }
 
 loginHeroku()
@@ -69,4 +73,4 @@ loginHeroku()
   .catch((error) => {
     console.log({ message: error.message });
     core.setFailed(error.message);
-  })
+  });
