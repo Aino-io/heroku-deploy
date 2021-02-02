@@ -24,7 +24,7 @@ async function buildPushAndDeploy() {
     const processType = core.getInput("process_type") || "web";
     const herokuAction = herokuActionSetUp(appName, processType);
 
-    const dockerCmd = `docker build --file ${dockerFilePath}/Dockerfile --build-arg ${buildOptions} --tag registry.heroku.com/${appName}/${processType} ${targetPath}`;
+    const dockerCmd = `docker build --file ${dockerFilePath}/Dockerfile --build-arg ${buildOptions} --tag registry.heroku.com/${appName}/${processType} ${targetPath} &> build.log`;
 
     await run(dockerCmd);
     console.log("Image built 🛠");
